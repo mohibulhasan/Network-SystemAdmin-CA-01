@@ -1,0 +1,245 @@
+/*
+ * EQUIPMENT GRID STYLING
+ * This section styles the grid layout used to display equipment cards.
+ */
+
+.equipment-grid {
+    /* Enables a CSS Grid layout for the container */
+    display: grid;
+    /*
+     * Defines a responsive grid that automatically fits as many columns as possible.
+     * Each column has a minimum width of 350px, ensuring a clean layout on different screen sizes.
+     */
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    /* Sets the spacing (gutter) between the grid items */
+    gap: 1.5em;
+}
+
+/* Styles a single equipment card within the grid */
+.equipment-card {
+    /* Sets the background color of the card to white */
+    background-color: #fff;
+    /* Adds a light gray border around the card */
+    border: 1px solid #ddd;
+    /* Rounds the corners of the card with a radius of 8 pixels */
+    border-radius: 8px;
+    /* Hides any content that overflows the card's boundaries, useful for images */
+    overflow: hidden;
+    /* Adds a subtle shadow for a 3D, raised effect */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Changes the mouse cursor to a pointer when hovering over the card, indicating it's clickable */
+    cursor: pointer;
+    /* Adds a smooth transition effect to the transform and box-shadow properties for a nice hover animation */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Styles the equipment card when the user hovers over it */
+.equipment-card:hover {
+    /* Lifts the card up by 5 pixels on the Y-axis, creating a "pop-up" effect */
+    transform: translateY(-5px);
+    /* Increases the intensity of the box shadow to enhance the lifted effect */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Styles the image inside the equipment card */
+.equipment-card img {
+    /* Ensures the image takes up the full width of its container */
+    width: 100%;
+    /* Sets a fixed height for the image */
+    height: 200px;
+    /*
+     * Resizes the image to cover the container while maintaining its aspect ratio.
+     * It will be cropped if necessary.
+     */
+    object-fit: cover;
+}
+
+/* Styles a generic image class */
+.image {
+    /* Ensures the image takes up the full width of its container */
+    width: 100%;
+    /* Sets a fixed height for the image */
+    height: 200px;
+    /*
+     * Resizes the image to fit inside the container while maintaining its aspect ratio.
+     * This may leave empty space if the aspect ratio doesn't match the container.
+     */
+    object-fit: inherit;
+}
+
+/* Styles the name/title text for the equipment card */
+.equipment-card-name {
+    /* Makes the font bold */
+    font-weight: bold;
+    /* Adds internal padding to the name container */
+    padding: 1em;
+    /* Centers the text horizontally */
+    text-align: center;
+}
+
+/* Styles the rating section within the card */
+.rating {
+    /* Adds internal padding to the rating container */
+    padding: 1em;
+    /* Aligns content vertically and horizontally within the container */
+    align-items: center;
+    text-align: center;
+}
+
+/* **Modal Styling** */
+
+/* Styles the modal pop-up window */
+.modal {
+    /* Hides the modal by default until it's triggered by JavaScript */
+    display: none;
+    /* Positions the modal relative to the viewport, keeping it fixed on the screen */
+    position: fixed;
+    /* Sets a high z-index to ensure it appears on top of all other content */
+    z-index: 1000;
+    /* Positions the modal to cover the entire screen */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    /* Allows scrolling within the modal if the content is too long */
+    overflow: auto;
+    /* Sets a semi-transparent black background for the overlay behind the modal content */
+    background-color: rgba(0, 0, 0, 0.6);
+    /* Adds space at the top of the modal for the content to appear below the top edge of the screen */
+    padding-top: 60px;
+}
+
+/* Styles the main content box of the modal */
+.modal-content {
+    /* Sets the background color of the content box to a light off-white */
+    background-color: #fefefe;
+    /* Centers the modal box horizontally and vertically on the screen */
+    margin: 5% auto;
+    /* Adds internal padding to the content box */
+    padding: 20px;
+    /* Adds a light gray border */
+    border: 1px solid #888;
+    /* Sets the width of the content box to 80% of the screen */
+    width: 80%;
+    /* Sets a maximum width for the content box to prevent it from getting too wide on large screens */
+    max-width: 600px;
+    /* Rounds the corners of the content box */
+    border-radius: 8px;
+    /* Sets the position to relative for positioning child elements (like the close button) inside it */
+    position: relative;
+}
+
+/* Styles the close button (x) inside the modal */
+.close-button {
+    /* Sets the color of the close button */
+    color: #aaa;
+    /* Positions the button absolutely relative to its parent (`.modal-content`) */
+    position: absolute;
+    /* Positions the button near the top-right corner */
+    top: 10px;
+    right: 25px;
+    /* Sets the font size and weight */
+    font-size: 35px;
+    font-weight: bold;
+}
+
+/* Styles the close button on hover and focus */
+.close-button:hover,
+.close-button:focus {
+    /* Changes the color to black on hover/focus */
+    color: black;
+    /* Removes any text decoration (like underline) */
+    text-decoration: none;
+    /* Changes the cursor to a pointer, indicating it's clickable */
+    cursor: pointer;
+}
+
+/* Styles the heading inside the modal body */
+#modal-body h2 {
+    /* Removes the default top margin from the heading */
+    margin-top: 0;
+}
+
+/* Styles the image inside the modal body */
+#modal-body img {
+    /* Ensures the image takes up the full width */
+    width: 100%;
+    /* Maintains the image's aspect ratio */
+    height: auto;
+    /* Rounds the corners of the image */
+    border-radius: 5px;
+    /* Adds space below the image */
+    margin-bottom: 1em;
+}
+
+/* Styles the price display inside the modal body */
+#modal-body .price {
+    /* Increases the font size and makes it bold */
+    font-size: 1.2em;
+    font-weight: bold;
+    /* Sets a specific color for the price (a bright blue) */
+    color: #007BFF;
+    /* Adds space below the price */
+    margin-bottom: 1em;
+}
+
+/* **Image Slider Styling** */
+
+/* Styles the container for a multiple-image slideshow */
+.slider-container {
+    /* Positions child elements (like buttons) relative to this container */
+    position: relative;
+    /* Centers the content horizontally */
+    text-align: center;
+    /* Adds space below the container */
+    margin-bottom: 15px;
+}
+
+/* Styles the images within the slider */
+.slider-container img {
+    /* Ensures the image takes up the full width of its container */
+    width: 100%;
+    /* Sets a maximum height for the image to prevent it from getting too tall */
+    max-height: 300px;
+    /*
+     * Resizes the image to fit entirely within the container while maintaining its aspect ratio.
+     * This will not crop the image but may leave empty space.
+     */
+    object-fit: contain;
+    /* Rounds the corners of the image */
+    border-radius: 6px;
+}
+
+/* Styles the navigation buttons (e.g., previous/next) for the slider */
+.slider-container button {
+    /* Positions the button absolutely relative to the `.slider-container` */
+    position: absolute;
+    /* Aligns the button vertically to the center of the container */
+    top: 50%;
+    /* Adjusts the vertical position to perfectly center the button */
+    transform: translateY(-50%);
+    /* Sets a semi-transparent black background for the button */
+    background: rgba(0, 0, 0, 0.5);
+    /* Sets the text/icon color to white */
+    color: white;
+    /* Removes the default button border */
+    border: none;
+    /* Sets the font size for the button's content (e.g., an arrow icon) */
+    font-size: 24px;
+    /* Adds internal padding to the button */
+    padding: 8px 12px;
+    /* Changes the cursor to a pointer when hovering, indicating it's clickable */
+    cursor: pointer;
+    /* Rounds the button to a perfect circle */
+    border-radius: 50%;
+}
+
+/* Positions the "previous" button on the left side of the slider */
+.prev-slide {
+    left: 10px;
+}
+
+/* Positions the "next" button on the right side of the slider */
+.next-slide {
+    right: 10px;
+}

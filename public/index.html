@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<!--"lang" attribute defines the main language of the document. 
+  <html> tag is the root element of the HTML document.-->
+<html lang="en">
+  <!-- <head> tag contains all the metadata for the website -->
+  <head>
+    <!-- Character encoding declaration which enables 4-byte encoding of all characters exists -->
+    <meta charset="UTF-8" />
+    <!-- ensures site responsiveness for all kinds of device widths -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- title displayed at the browser tab, every page should have unique title -->
+    <title>GearUp FitZone - Premium Fitness Equipment</title>
+    <link rel="icon" type="image/x-icon" href="/contents/images/favicon.ico" />
+    <!-- link tag includes stylesheets with paths for the website -->
+    <link rel="stylesheet" href="main.css" />
+    <!-- main body customized stylesheet used to work with jQuery codes -->
+    <link rel="stylesheet" href="body.css" />
+    <!-- font-awsome is used here to use the special icons, e.g. star, menu bars, and close button -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <!-- <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    /> -->
+  </head>
+  <body>
+    <!-- when the display size is less than equal to 700px then navigation bar will collapse and shows a Hambargur symbol.  -->
+    <button id="open-sidebar-button" onclick="openSidebar()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="40px"
+        viewBox="0 -960 960 960"
+        width="40px"
+        fill="#000000"
+      >
+        <path
+          d="M165.13-254.62q-10.68 0-17.9-7.26-7.23-7.26-7.23-18t7.23-17.86q7.22-7.13 17.9-7.13h629.74q10.68 0 17.9 7.26 7.23 7.26 7.23 18t-7.23 17.87q-7.22 7.12-17.9 7.12H165.13Zm0-200.25q-10.68 0-17.9-7.27-7.23-7.26-7.23-17.99 0-10.74 7.23-17.87 7.22-7.13 17.9-7.13h629.74q10.68 0 17.9 7.27 7.23 7.26 7.23 17.99 0 10.74-7.23 17.87-7.22 7.13-17.9 7.13H165.13Zm0-200.26q-10.68 0-17.9-7.26-7.23-7.26-7.23-18t7.23-17.87q7.22-7.12 17.9-7.12h629.74q10.68 0 17.9 7.26 7.23 7.26 7.23 18t-7.23 17.86q-7.22 7.13-17.9 7.13H165.13Z"
+        />
+      </svg>
+    </button>
+    <!-- Created Navbar menu after the learning from youtube tutorial. Link: https://youtu.be/m7YDWNz65iI?si=joQzku8BMrYi2Y3z -->
+    <nav id="navbar">
+      <ul>
+        <li>
+          <!-- to close the sidebar menu in the smaller device with a X icon of font-awsome.  -->
+          <button id="close-sidebar-button" onclick="closeSidebar()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="40px"
+              viewBox="0 -960 960 960"
+              width="40px"
+              fill="#FFFFFF"
+            >
+              <path
+                d="m480-444.62-209.69 209.7q-7.23 7.23-17.5 7.42-10.27.19-17.89-7.42-7.61-7.62-7.61-17.7 0-10.07 7.61-17.69L444.62-480l-209.7-209.69q-7.23-7.23-7.42-17.5-.19-10.27 7.42-17.89 7.62-7.61 17.7-7.61 10.07 0 17.69 7.61L480-515.38l209.69-209.7q7.23-7.23 17.5-7.42 10.27-.19 17.89 7.42 7.61 7.62 7.61 17.7 0 10.07-7.61 17.69L515.38-480l209.7 209.69q7.23 7.23 7.42 17.5.19 10.27-7.42 17.89-7.62 7.61-17.7 7.61-10.07 0-17.69-7.61L480-444.62Z"
+              />
+            </svg>
+          </button>
+        </li>
+        <li class="logo-name"><a href="#">GearUp FitZone</a></li>
+        <li><a href="#">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact US</a></li>
+        <li>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search equipment..."
+            style="margin: 20px 0; padding: 10px; width: 100%; max-width: 400px"
+          />
+        </li>
+      </ul>
+    </nav>
+    <!-- implemented functions to close the bar by click/tap anywhere on the screen. -->
+    <div id="overlay" onclick="closeSidebar()"></div>
+    <main>
+      <h1 style="text-align: center">Our Equipment</h1>
+      <div id="equipment-list" class="equipment-grid"></div>
+    </main>
+    <!-- From jQuery the main products' card details will be shown -->
+    <div id="equipment-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button">×</span>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+    <!-- About page description, although implemented in the same page but it can be in a seperate dymanic page. -->
+    <div class="about">
+      <section id="about" class="about-section">
+        <h1>
+          About <span style="color: #2a9d8f">GearUp FitZone</span>
+        </h1> </br>
+
+        <p>
+          At <strong>GearUp FitZone</strong>, we believe fitness should be
+          within reach—regardless of your space, budget, or experience level.
+          Whether you're an athlete, coach, gym enthusiast, or simply someone
+          eager to stay active, we're here to equip you with the tools you need
+          to move, train, and grow confidently. Our platform is designed to make
+          renting high-quality fitness equipment easy, intuitive, and
+          accessible—right from your browser.
+        </p>
+
+        <p>
+          We understand that today’s fitness habits are evolving. With more
+          people working from home, navigating flexible schedules, and
+          preferring personalized training spaces, the demand for adaptable
+          fitness solutions has never been greater.
+          <strong>GearUp FitZone</strong> fills this gap by offering affordable,
+          short-term rentals of professional-grade strength, cardio, and
+          mobility equipment—all backed by a smooth online experience and
+          human-centered support.
+        </p>
+
+        <h2>Our Mission</h2>
+        <p>
+          To empower individuals and communities to train on their own terms by
+          providing easy access to premium workout equipment—without long-term
+          commitments, high upfront costs, or complicated setup.
+        </p>
+
+        <h2>What We Offer</h2>
+        <ul>
+          <li>
+            🏋️ A wide selection of gear across strength, cardio, flexibility,
+            and recovery
+          </li>
+          <li>
+            📸 Clean product galleries with multiple angles, demo videos, and
+            star ratings
+          </li>
+          <li>💡 Transparent pricing and clear descriptions for every item</li>
+          <li>
+            🗓️ A built-in reservation system that prevents double bookings
+          </li>
+          <li>
+            🛠️ Responsive support from a team that understands fitness and tech
+          </li>
+        </ul>
+
+        <h2>Why It Matters</h2>
+        <p>
+          At <strong>GearUp FitZone</strong>, we’re not just renting
+          dumbbells—we’re fueling people’s confidence. Whether it's enabling a
+          new mom to exercise from home, helping a trainer scale a pop-up class,
+          or supporting a student staying fit in a tiny apartment—we’re here to
+          remove barriers and make movement more accessible.
+        </p>
+
+        <h2>Our Platform</h2>
+        <p>
+          Designed with simplicity in mind, our app lets you browse by category,
+          watch demo videos, reserve items with a few clicks, and even check
+          back later to track your gear. It's all done in-browser—no downloads,
+          no learning curves. And when you're done, just return the equipment
+          and choose something new.
+        </p>
+
+        <p>
+          Each reservation is stored locally, so there's no stress about logging
+          in or remembering passwords. It’s fast, clear, and customer-first—just
+          the way fitness should be.
+        </p>
+
+        <h2>Built for You</h2>
+        <p>
+          We proudly support everyday movers and motivators: home gym warriors,
+          small fitness studio owners, traveling coaches, and anyone exploring
+          new ways to stay active. Wherever you are in your fitness story, we’ve
+          designed GearUp FitZone to meet you there—with smart tools, flexible
+          rentals, and community-focused service.
+        </p>
+
+        <h2>Looking Ahead</h2>
+        <p>
+          We're not standing still. We're constantly expanding our catalog,
+          listening to feedback, and adding features to improve your experience.
+          From smarter search to guided routines, we’re building toward a future
+          where training at home (or anywhere) is just as powerful as hitting
+          the gym floor.
+        </p>
+
+        <h2>Get in Touch</h2>
+        <p>
+          Got questions? Ideas? Equipment you’d love to see? Drop us a message
+          anytime—we’re real people who love hearing how folks use our platform.
+          You can also use the <a href="#contact">Contact Us</a> section below
+          to start the conversation.
+        </p>
+
+        <h2>Let’s Gear Up</h2>
+        <p>
+          With <strong>GearUp FitZone</strong>, you’re not just borrowing
+          equipment—you’re claiming your space, chasing your goals, and staying
+          empowered. So go ahead: lift, run, stretch, sweat, reset. We’ve got
+          the gear. You bring the grit.
+        </p>
+      </section>
+    </div>
+    <!-- Contact us section used a forms and seperate CSS to style the form  -->
+    <h1 style="text-align: center">Contact Us</h1>
+    <section id="contact" class="contact-section">
+      <h2 style="color: #2a9d8f; margin-top: 30px;">Contact Us</h2>
+      <form id="contactForm">
+        <input type="text" id="contact-name" placeholder="Your Name" required />
+        <input
+          type="email"
+          id="contact-email"
+          placeholder="Your Email"
+          required
+        />
+        <input type="text" id="contact-subject" placeholder="Subject" />
+        <textarea
+          id="contact-message"
+          placeholder="Your Message"
+          rows="5"
+          required
+        ></textarea>
+        <!-- We can implement onClick() functions here to work with the inputs. -->
+        <button type="submit">Send Message</button>
+      </form>
+      <div id="contactStatus" class="contact-status"></div>
+    </section>
+    <footer>
+      <div>
+        <p>© 2024 GearUp FitZone. All rights reserved.</p>
+      </div>
+    </footer>
+    <!-- jQuery library imported from the official site.  -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- personal JavaScript code  -->
+    <script src="script.js"></script>
+  </body>
+</html>

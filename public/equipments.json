@@ -1,0 +1,86 @@
+[
+  {
+    "id": 1,
+    "name": "Adjustable Dumbbells",
+    "category": "Strength",
+    "price": 129.99,
+    "rating": 4.0,
+    "description": "Compact dumbbells with adjustable weight plates.",
+    "images": [
+      "contents/assets/Adjustable-Dumbbell1.png",
+      "contents/assets/Adjustable-Dumbbell2.png",
+      "contents/assets/Adjustable-Dumbbell3.png"
+    ],
+    "video": "https://www.example.com/videos/adjustable-dumbbells.mp4"
+  },
+  {
+    "id": 2,
+    "name": "Treadmill ProX",
+    "category": "Cardio",
+    "price": 799.0,
+    "rating": 4.5,
+    "description": "High-end treadmill with incline control and heart rate monitor.",
+    "images": [
+      "/contents/assets/trademill-prox.png",
+      "/contents/assets/trademill-prox2.png",
+      "/contents/assets/trademill-prox3.png"
+    ],
+    "video": "https://www.example.com/videos/treadmill-prox.mp4"
+  },
+  {
+    "id": 3,
+    "name": "Kettlebell Set",
+    "category": "Strength",
+    "price": 89.5,
+    "rating": 3.5,
+    "description": "6kg, 10kg, and 14kg kettlebells with ergonomic grip.",
+    "images": [
+      "/contents/assets/Kettlebell-Set1.png",
+      "/contents/assets/Kettlebell-Set2.png",
+      "/contents/assets/Kettlebell-Set3.png"
+    ],
+    "video": "https://www.example.com/videos/kettlebell-set.mp4"
+  },
+  {
+    "id": 4,
+    "name": "Resistance Bands",
+    "category": "Accessories",
+    "price": 25.0,
+    "rating": 3,
+    "description": "Set of 5 color-coded bands for various resistance levels.",
+    "images": [
+      "/contents/assets/Resistance-Bands1.png",
+      "/contents/assets/Resistance-Bands2.png",
+      "/contents/assets/Resistance-Bands3.png"
+    ],
+    "video": "https://www.example.com/videos/resistance-bands.mp4"
+  },
+  {
+    "id": 5,
+    "name": "Stationary Bike",
+    "category": "Cardio",
+    "price": 349.0,
+    "rating": 5,
+    "description": "Smooth pedaling indoor bike with digital display.",
+    "images": [
+      "/contents/assets/Stationary-Bike1.png",
+      "/contents/assets/Stationary-Bike2.png",
+      "/contents/assets/Stationary-Bike3.png"
+    ],
+    "video": "https://www.example.com/videos/stationary-bike.mp4"
+  },
+  {
+    "id": 6,
+    "name": "Yoga Mat Pro",
+    "category": "Accessories",
+    "price": 39.99,
+    "rating": 2.5,
+    "description": "Extra thick non-slip mat for yoga and stretching routines.",
+    "images": [
+      "/contents/assets/Yoga-Mat1.png",
+      "/contents/assets/Yoga-Mat2.png",
+      "/contents/assets/Yoga-Mat3.png"
+    ],
+    "video": "https://www.example.com/videos/yoga-mat-pro.mp4"
+  }
+]

@@ -1,0 +1,15 @@
+# my_static_app/docker-compose.yml
+
+version: '3.8'
+
+services:
+  web:
+    # Build the image using the Dockerfile located in the nginx/ directory.
+    # The build context is the project root ('.'), allowing access to 'public/'
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile.nginx
+    container_name: network-systemadmin-app # A friendly name for your container
+    ports:
+      - "80:80" # Map host's port 80 to container's port 80
+    restart: always # Keep the container running if it crashes

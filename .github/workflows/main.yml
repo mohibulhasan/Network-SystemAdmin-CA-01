@@ -106,7 +106,8 @@ jobs:
 
       - name: Create Ansible inventory for AWS EC2
         run: |
-          echo "[web_servers]" > ansible/inventory.ini
+          mkdir -p inventory
+          echo "[web_servers]" > inventory/host.ini
           # Use the EC2 public IP from Terraform output
           # 'ansible_user=ubuntu' assumes your EC2 AMI uses 'ubuntu' as the default SSH user
           # 'ansible_ssh_private_key_file' points to the key we just set up
@@ -116,5 +117,5 @@ jobs:
       - name: Run Ansible Playbook - Deploy Dockerized Application
         # This assumes your main Ansible playbook for Docker deployment is named 'playbook.yml'
         # and is located in 'DeployTools/ansible'
-        run: ansible-playbook -i inventory.ini playbook.yml
+        run: ansible-playbook -i inventory/host.ini playbook.yml
         working-directory: ./DeployTools/ansible

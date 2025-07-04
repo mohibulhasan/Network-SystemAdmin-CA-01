@@ -97,14 +97,19 @@ resource "tls_private_key" "ssh_key_generated" {
   rsa_bits  = 4096
 }
 
-resource "aws_key_pair" "ec2_key" {
-  key_name   = var.key_pair_name
-  public_key = tls_private_key.ssh_key_generated.public_key_openssh
-
-  tags = {
-    Name = "${var.environment}-ec2-key"
-  }
+# Data source to reference the existing EC2 Key Pair
+data "aws_key_pair" "existing_ec2_key" {
+  key_name = "my-ec2-keypair" # <--- This MUST match the exact name of your existing key pair
 }
+#======= had issue with AWS existing key pair=====================
+# resource "aws_key_pair" "ec2_key" {
+#   key_name   = var.key_pair_name
+#   public_key = tls_private_key.ssh_key_generated.public_key_openssh
+
+#   tags = {
+#     Name = "${var.environment}-ec2-key"
+#   }
+# }
 
 # IMPORTANT: This block writes the private key to a local file.
 # YOU MUST ENSURE THIS FILE IS NOT COMMITTED TO GIT!
@@ -122,7 +127,10 @@ resource "local_file" "ssh_private_key_pem" {
 resource "aws_instance" "web_server" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
-  key_name                    = aws_key_pair.ec2_key.key_name
+  key_name                    = data.aws_key_pair.existing_ec2_key.key_name
+  # Use the existing key pair from AWS for above.
+  # If you want to use the generated key, uncomment the line below and comment the above line.
+  #key_name                    = aws_key_pair.ec2_key.key_name
   vpc_security_group_ids      = [aws_security_group.web_server_sg.id]
   subnet_id                   = aws_subnet.public.id
   associate_public_ip_address = true # Important for direct public access

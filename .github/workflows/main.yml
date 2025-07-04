@@ -1,118 +1,129 @@
-name: CI/CD Pipeline to AWS EC2
+name: CI/CD Pipeline to AWS EC2 # Name of your GitHub Actions workflow, displayed in the Actions tab.
 
-on:
-  push:
+on: # Defines when the workflow will be triggered.
+  push: # Triggers the workflow when commits are pushed to specified branches.
     branches:
-      - main # Trigger on push to the main branch
-  workflow_dispatch: # Allows manual triggering from GitHub UI
+      - main # Workflow runs on pushes to the 'main' branch.
+  workflow_dispatch:# Allows you to manually trigger the workflow from the GitHub UI.
+    # This is useful for testing or re-running the pipeline on demand.
 
-env:
-  AWS_REGION: "eu-north-1"
+env: # Environment variables available to all jobs in this workflow.
+  AWS_REGION: "eu-north-1" # Sets the AWS region to be used for Terraform and AWS CLI commands.
 
-jobs:
+jobs: # Defines a set of jobs that will be executed as part of the workflow.
   # Job to build and push Docker image (This part is cloud-agnostic)
-  build-and-push-docker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  build-and-push-docker: # Name of the first job: Builds and pushes a Docker image.
+    runs-on: ubuntu-latest # Specifies the type of runner (virtual machine) to use for this job.
+    steps: # A sequence of tasks or actions to be performed in this job.
+      - name: Checkout repository # Name of the step.
+        uses: actions/checkout@v4 # Uses the 'checkout' action to clone your repository onto the runner.
+        # with: # Configuration options for the 'checkout' action.
+        #   path: . # If uncommented, this would clone the repository directly into the GITHUB_WORKSPACE directory.
+        # It's important for consistent paths, and was a previous suggestion to fix pathing issues.
 
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx # Configures Docker Buildx for advanced Docker builds.
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
+      - name: Log in to Docker Hub # Logs into Docker Hub using provided credentials.
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKER_USERNAME }} # Retrieves Docker Hub username from GitHub Secrets.
+          password: ${{ secrets.DOCKER_PASSWORD }} # Retrieves Docker Hub password from GitHub Secrets.
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image # Builds the Docker image and pushes it to Docker Hub.
         uses: docker/build-push-action@v5
         with:
-          context: . # Path to your Dockerfile context (project root)
-          file: ./nginx/Dockerfile.nginx # Path to your Dockerfile
-          push: true
-          tags: mohibulhasan/network-systemadmin-ca-01-web:1.0 # Your Docker Hub image and tag
-          cache-from: type=gha # Use GitHub Actions cache for faster builds
-          cache-to: type=gha,mode=max # Store build cache
+          context:
+            . # The build context for Docker is the current directory (GITHUB_WORKSPACE),
+            # which is the root of your cloned repository within the runner's default checkout structure.
+          file: ./nginx/Dockerfile.nginx # Specifies the path to your Dockerfile for the Nginx service.
+          push: true # Instructs the action to push the built image to Docker Hub.
+          tags: mohibulhasan/network-systemadmin-ca-01-web:1.0 # The Docker image name and tag to be used.
+          cache-from: type=gha # Uses GitHub Actions cache for speeding up subsequent builds.
+          cache-to: type=gha,mode=max # Stores build cache to GitHub Actions cache.
 
   # Job to provision infrastructure with Terraform for AWS EC2
-  terraform-apply:
-    needs: build-and-push-docker # Depends on Docker image being built
-    runs-on: ubuntu-latest
-    outputs:
-      vm_public_ip: ${{ steps.terraform-output.outputs.vm_public_ip }} # Pass EC2 Public IP to the next job
+  terraform-apply: # Name of the second job: Provisions AWS EC2 infrastructure using Terraform.
+    needs: build-and-push-docker # This job will only run after the 'build-and-push-docker' job successfully completes.
+    runs-on: ubuntu-latest # Specifies the runner type.
+    outputs: # Defines outputs from this job that can be consumed by subsequent jobs.
+      vm_public_ip:
+        ${{ steps.terraform-output.outputs.vm_public_ip }} # Passes the EC2 instance's public IP
+        # as an output to other jobs (e.g., ansible-deploy).
     steps:
-      - name: Checkout repository
+      - name: Checkout repository # Clones the repository.
         uses: actions/checkout@v4
+        # with:
+        #   path: . # If uncommented, this would clone the repository directly into the GITHUB_WORKSPACE directory.
 
-      - name: Setup Terraform
+      - name: Setup Terraform # Sets up the Terraform CLI on the runner.
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.8.0 # Specifying desired Terraform version
+          terraform_version: 1.8.0 # Specifies the desired Terraform version.
 
-      # --- AWS Authentication: Replaces Azure CLI login ---
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials # Configures AWS credentials for Terraform and AWS CLI.
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # GitHub Secret for AWS Access Key ID
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # GitHub Secret for AWS Secret Access Key
-          aws-region: ${{ env.AWS_REGION }} # Use the AWS region defined in the workflow's env section
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # Retrieves AWS Access Key ID from GitHub Secrets.
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # Retrieves AWS Secret Access Key from GitHub Secrets.
+          aws-region: ${{ env.AWS_REGION }} # Uses the AWS region defined in the workflow's environment variables.
 
-      - name: Terraform Init
-        id: init
-        run: terraform init
-        working-directory: ./DeployTools/terraform # Path to your AWS Terraform files
+      - name: Terraform Init # Initializes a Terraform working directory.
+        id: init # Assigns an ID to this step to reference its outputs later.
+        run: terraform init # Executes the 'terraform init' command.
+        working-directory: ./DeployTools/terraform # Sets the working directory for this command, where your Terraform files are located.
 
-      - name: Terraform Validate
+      - name: Terraform Validate # Validates the Terraform configuration files.
         id: validate
         run: terraform validate
         working-directory: ./DeployTools/terraform
 
-      - name: Terraform Apply
+      - name: Terraform Apply # Applies the Terraform configuration to provision resources.
         id: apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve # Automatically approves the plan without manual confirmation.
         working-directory: ./DeployTools/terraform
 
-      - name: Get EC2 Public IP from Terraform output
-        id: terraform-output
-        run: |
-          # Assuming your AWS Terraform configuration outputs the EC2 public IP as 'vm_public_ip'
-          VM_IP=$(terraform output -raw vm_public_ip)
-          echo "vm_public_ip=$VM_IP" >> $GITHUB_OUTPUT
+      - name: Get EC2 Public IP from Terraform output # Retrieves the public IP of the provisioned EC2 instance.
+        id: terraform-output # Assigns an ID to capture its output.
+        run: | # Multiline shell script.
+          # Assumes your AWS Terraform configuration outputs the EC2 public IP as 'vm_public_ip'.
+          VM_IP=$(terraform output -raw vm_public_ip) # Captures the Terraform output into a shell variable.
+          echo "vm_public_ip=$VM_IP" >> $GITHUB_OUTPUT # Sets the 'vm_public_ip' as a step output,
+                                                      # which is then exposed as a job output.
         working-directory: ./DeployTools/terraform
 
   # Job to deploy application with Ansible to AWS EC2
-  ansible-deploy:
-    needs: terraform-apply # Depends on Terraform provisioning the EC2 instance
-    runs-on: ubuntu-latest
+  ansible-deploy: # Name of the third job: Deploys the application using Ansible.
+    needs: terraform-apply # This job waits for the 'terraform-apply' job to complete successfully.
+    runs-on: ubuntu-latest # Specifies the runner type.
     steps:
-      - name: Checkout repository
+      - name: Checkout repository # Clones the repository.
         uses: actions/checkout@v4
+        # with:
+        #   path: . # If uncommented, this would clone the repository directly into the GITHUB_WORKSPACE directory.
 
-      - name: Install Ansible and Docker Python module
-        run: pip install ansible docker # 'docker' is needed for Ansible's Docker modules
+      - name: Install Ansible and Docker Python module # Installs necessary tools for Ansible.
+        run: pip install ansible docker # 'docker' module is needed for Ansible's Docker-related tasks.
 
-      - name: Set up SSH key for Ansible
-        run: |
-          mkdir -p ~/.ssh
-          # Create a key file for Ansible SSH connection to EC2
-          # It's good practice to give it a specific name like 'id_ec2_ansible.pem'
+      - name: Set up SSH key for Ansible # Configures the SSH key for Ansible to connect to the EC2 instance.
+        run: | # Multiline shell script.
+          mkdir -p ~/.ssh # Creates the .ssh directory if it doesn't exist.
+          # Creates a private key file on the runner from a GitHub Secret.
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ec2_ansible.pem
-          chmod 400 ~/.ssh/id_ec2_ansible.pem # Set strict permissions for the private key
-
-          # Add the EC2 instance's public IP to known_hosts to prevent SSH prompts
+          chmod 400 ~/.ssh/id_ec2_ansible.pem # Sets strict permissions (read-only for owner) for the private key,
+                                              # which is required by SSH.
+          # Adds the EC2 instance's public IP to the known_hosts file to prevent SSH prompts (like "Are you sure you want to continue connecting?").
           ssh-keyscan -H ${{ needs.terraform-apply.outputs.vm_public_ip }} >> ~/.ssh/known_hosts
 
-      - name: Create Ansible inventory for AWS EC2
+      - name: Create Ansible inventory for AWS EC2 # Dynamically creates the Ansible inventory file.
         run: |
-          mkdir -p inventory
-          echo "[webservers]" > inventory/host.ini
+          mkdir -p inventory # Creates an 'inventory' directory within the Ansible working directory.
+          echo "[webservers]" > inventory/host.ini # Starts the inventory file with the host group 'webservers'.
+          # Adds the EC2 instance's public IP to the inventory under the 'webservers' group,
+          # specifying the SSH user ('ubuntu') and the path to the private key.
           echo "${{ needs.terraform-apply.outputs.vm_public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_ec2_ansible.pem" >> inventory/host.ini
-        working-directory: ./DeployTools/ansible
+        working-directory: ./DeployTools/ansible # Sets the working directory to where your Ansible files are.
 
-      - name: Run Ansible Playbook - Deploy Dockerized Application
-        # This assumes your main Ansible playbook for Docker deployment is named 'playbook.yml'
-        # and is located in 'DeployTools/ansible'
-        run: ansible-playbook -i inventory/host.ini playbook.yml
-        working-directory: ./DeployTools/ansible
+      - name: Run Ansible Playbook - Deploy Dockerized Application # Executes the main Ansible playbook for deployment.
+        run: ansible-playbook -i inventory/host.ini playbook.yml # Runs the playbook, specifying the inventory file.
+        working-directory: ./DeployTools/ansible # Sets the working directory for this command.

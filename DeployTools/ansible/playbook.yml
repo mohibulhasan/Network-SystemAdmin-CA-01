@@ -1,95 +1,96 @@
----
-- name: Deploy Dockerized Nginx Static App with Docker Compose to EC2
-  hosts: webservers # <--- CONFIRMED: Matches your main.yml inventory group [webservers]
-  become: yes
-  vars:
-    ansible_user: ubuntu
-    ansible_python_interpreter: /usr/bin/python3
-    app_project_dir: /opt/network-systemadmin-app
+--- # YAML document start marker
+- name: Deploy Dockerized Nginx Static App with Docker Compose to EC2 # Name of the Ansible playbook.
+  hosts:
+    webservers # Specifies the group of hosts from the inventory that this playbook will target.
+    # 'webservers' must match the group name defined in your 'inventory/host.ini'.
+  become: yes # Grants elevated privileges (sudo) for tasks executed on the remote host.
+  vars: # Defines variables that can be used throughout this playbook.
+    ansible_user: ubuntu # The SSH username to connect to the EC2 instance.
+    ansible_python_interpreter: /usr/bin/python3 # Specifies the Python interpreter path on the remote host.
+    app_project_dir: /opt/network-systemadmin-app # The directory on the EC2 instance where your application will be deployed.
 
-  tasks:
-    - name: Update all apt packages
+  tasks: # A list of tasks to be executed in sequential order.
+    - name: Update all apt packages # Updates the package lists and upgrades all installed packages on Ubuntu.
+      ansible.builtin.apt: # Uses the 'apt' module for package management.
+        name: "*" # Specifies all packages.
+        state: latest # Ensures packages are updated to their latest version.
+        update_cache: yes # Updates the apt package cache before installing/updating.
+
+    - name: Install Docker.io package # Installs the Docker engine.
       ansible.builtin.apt:
-        name: "*"
-        state: latest
-        update_cache: yes
+        name: docker.io # The name of the Docker package.
+        state: present # Ensures the package is installed.
+        update_cache: yes # Updates apt cache.
 
-    - name: Install Docker.io package
+    - name: Start and enable Docker service # Ensures Docker service is running and starts automatically on boot.
+      ansible.builtin.service: # Uses the 'service' module to manage system services.
+        name: docker # The name of the Docker service.
+        state: started # Ensures the service is running.
+        enabled: yes # Ensures the service starts automatically on system boot.
+
+    - name: Add 'ubuntu' user to the 'docker' group # Allows the 'ubuntu' user to run Docker commands without sudo.
+      ansible.builtin.user: # Uses the 'user' module to manage user accounts and groups.
+        name: ubuntu # The username to modify.
+        groups: docker # The group to add the user to.
+        append: yes # Appends the user to the specified group without removing them from other groups.
+
+    - name: Install Docker Compose (v1) via apt # Installs Docker Compose using apt.
       ansible.builtin.apt:
-        name: docker.io
-        state: present
-        update_cache: yes
+        name: docker-compose # The name of the Docker Compose package.
+        state: present # Ensures the package is installed.
 
-    - name: Start and enable Docker service
-      ansible.builtin.service:
-        name: docker
-        state: started
-        enabled: yes
+    - name: Create application project directory on EC2 # Creates the target directory for the application on the EC2 instance.
+      ansible.builtin.file: # Uses the 'file' module to manage files and directories.
+        path: "{{ app_project_dir }}" # The path to create, using the variable defined above.
+        state: directory # Ensures it's a directory.
+        mode: "0755" # Sets directory permissions (rwxr-xr-x).
+        owner: ubuntu # Sets the owner of the directory.
+        group: ubuntu # Sets the group of the directory.
+        recurse: yes # Creates parent directories if they don't exist.
 
-    - name: Add 'ubuntu' user to the 'docker' group
-      ansible.builtin.user:
-        name: ubuntu
-        groups: docker
-        append: yes
+    - name: Copy entire project context to EC2 for Docker Compose build # Copies all necessary application files to the EC2 instance.
+      ansible.builtin.synchronize: # Uses the 'synchronize' module (which uses rsync internally) for efficient file transfer.
+        # CRITICAL FIX: With 'path: .' in actions/checkout in main.yml, GITHUB_WORKSPACE is now the repo root.
+        # This ensures all project files (including docker-compose.yml and nginx/) are copied.
+        src:
+          "{{ lookup('env', 'GITHUB_WORKSPACE') }}/" # The source path on the GitHub Actions runner.
+          # GITHUB_WORKSPACE now points directly to your repository's root.
+        dest: "{{ app_project_dir }}/" # The destination path on the EC2 instance.
+        mode: push # Pushes files from the Ansible controller (runner) to the remote host (EC2).
+        archive: yes # Ensures recursive, symlink-preserving, and permission-preserving copy.
+        rsync_opts: # Additional options for the rsync command.
+          - "--exclude=.git/" # Excludes the .git directory.
+          - "--exclude=DeployTools/" # Excludes the DeployTools folder itself from being copied to the app directory.
+          - "--exclude=.vscode/" # Excludes VS Code configuration files.
+          - "--exclude=__pycache__/" # Excludes Python cache directories.
+          - "--exclude=*.swp" # Excludes Vim swap files.
+          - "--exclude=*.bak" # Excludes backup files.
 
-    - name: Install Docker Compose (v1) via apt
-      ansible.builtin.apt:
-        name: docker-compose
-        state: present
-
-    - name: Create application project directory on EC2
+    - name: Ensure correct ownership for copied project files # Sets proper ownership for the copied files.
       ansible.builtin.file:
-        path: "{{ app_project_dir }}"
-        state: directory
-        mode: "0755"
-        owner: ubuntu
-        group: ubuntu
-        recurse: yes
+        path: "{{ app_project_dir }}" # The path to apply ownership to.
+        owner: ubuntu # Sets the owner.
+        group: ubuntu # Sets the group.
+        mode: "0755" # Sets permissions.
+        recurse: yes # Applies ownership and permissions recursively to all files and subdirectories.
 
-    - name: Copy entire project context to EC2 for Docker Compose build
-      ansible.builtin.synchronize:
-        # CRITICAL FIX: With 'path: .' in checkout, GITHUB_WORKSPACE is now the repo root.
-        src: "{{ lookup('env', 'GITHUB_WORKSPACE') }}/" # <--- UPDATED src path
-        dest: "{{ app_project_dir }}/"
-        mode: push
-        archive: yes
-        rsync_opts:
-          - "--exclude=.git/"
-          - "--exclude=DeployTools/" # Ensure this still correctly excludes the DeployTools folder
-          - "--exclude=.vscode/"
-          - "--exclude=__pycache__/"
-          - "--exclude=*.swp"
-          - "--exclude=*.bak"
+    - name: Stop and remove old Docker Compose services (if any) # Stops and removes any previously running Docker Compose services.
+      ansible.builtin.command: | # Executes a shell command.
+        docker-compose down -v # Stops containers and removes networks/volumes. '-v' also removes named volumes.
+      args: # Arguments passed to the command module.
+        chdir: "{{ app_project_dir }}" # Changes the directory to the app project dir before executing the command.
+      ignore_errors: yes # Continues playbook execution even if this command fails (e.g., if no services are running yet).
 
-    # --- REMOVE DEBUGGING TASKS (Delete these tasks) ---
-    # Delete the "Debug: Display GITHUB_WORKSPACE environment variable",
-    # "Debug: List contents of GITHUB_WORKSPACE", and
-    # "Debug: List contents of expected repo root (if exists)" tasks.
-    # --- END DEBUGGING TASKS ---
-
-    - name: Ensure correct ownership for copied project files
-      ansible.builtin.file:
-        path: "{{ app_project_dir }}"
-        owner: ubuntu
-        group: ubuntu
-        mode: "0755"
-        recurse: yes
-
-    - name: Stop and remove old Docker Compose services (if any)
+    - name: Build and run Docker Compose services # Builds Docker images and starts services defined in docker-compose.yml.
       ansible.builtin.command: |
-        docker-compose down -v
+        docker-compose up -d --build --force-recreate # Starts services in detached mode ('-d'),
+                                                      # rebuilds images ('--build'), and recreates containers ('--force-recreate').
       args:
-        chdir: "{{ app_project_dir }}"
-      ignore_errors: yes
-
-    - name: Build and run Docker Compose services
-      ansible.builtin.command: |
-        docker-compose up -d --build --force-recreate
-      args:
-        chdir: "{{ app_project_dir }}"
-      register: docker_compose_output
+        chdir: "{{ app_project_dir }}" # Executes the command from the application's root directory.
+      register: docker_compose_output # Registers the output of the command into a variable.
+      # Determines if the task is "changed" (i.e., if something was deployed or changed).
       changed_when: "docker_compose_output.rc == 0 and ('Creating' in docker_compose_output.stdout or 'Recreating' in docker_compose_output.stdout or 'Building' in docker_compose_output.stdout)"
 
-    - name: Display Docker Compose deployment output
-      ansible.builtin.debug:
-        var: docker_compose_output.stdout_lines
+    - name: Display Docker Compose deployment output # Displays the output from the Docker Compose command for debugging/verification.
+      ansible.builtin.debug: # Uses the 'debug' module to print information.
+        var: docker_compose_output.stdout_lines # Displays the standard output lines of the Docker Compose command.

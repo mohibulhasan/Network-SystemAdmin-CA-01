@@ -1,15 +1,25 @@
 # my_static_app/docker-compose.yml
+# This file defines the services, networks, and volumes for your Docker application.
+# It allows you to run a multi-container Docker application with a single command.
 
-version: '3.8'
+version: '3.8' # Specifies the Docker Compose file format version. Using '3.8' for modern features.
 
-services:
-  web:
+services: # Defines the services (containers) that make up your application.
+  web: # This is the name of your first service, often representing a web server.
     # Build the image using the Dockerfile located in the nginx/ directory.
     # The build context is the project root ('.'), allowing access to 'public/'
-    build:
-      context: .
-      dockerfile: ./nginx/Dockerfile.nginx
-    container_name: network-systemadmin-app # A friendly name for your container
-    ports:
-      - "80:80" # Map host's port 80 to container's port 80
-    restart: always # Keep the container running if it crashes
+    build: # Specifies how to build the Docker image for this service.
+      context: . # The build context is the current directory (project root),
+                 # where docker-compose.yml is located. This allows the Dockerfile
+                 # to access other folders like 'public/' for static files.
+      dockerfile: ./nginx/Dockerfile.nginx # Specifies the path to the Dockerfile
+                                           # to use for building this service's image.
+    container_name: network-systemadmin-app # A custom, friendly name for the running container.
+                                             # Makes it easier to identify and manage the container.
+    ports: # Maps ports between the host machine and the container.
+      - "80:80" # Maps port 80 on the host (where Docker Compose is running)
+                # to port 80 inside the container. This allows external traffic
+                # to reach your Nginx web server running inside the container.
+    restart: always # Specifies the restart policy for the container.
+                    # 'always' means the container will always restart if it stops,
+                    # unless it is explicitly stopped or Docker is restarted.

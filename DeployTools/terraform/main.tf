@@ -152,3 +152,14 @@ resource "aws_instance" "web_server" {
               echo "Docker installed and user added to docker group."
               EOF
 }
+
+
+terraform {
+  backend "s3" {
+    bucket         = "network-admin-ci-cd-bucket-1"  # <--- REPLACE with your actual S3 bucket name
+    key            = "app-deployment/terraform.tfstate"         # <--- A unique path/name for this specific state file
+    region         = "eu-north-1"                                # <--- REPLACE with your AWS_REGION
+    encrypt        = true                                       # Encrypts the state file at rest
+    #dynamodb_table = "terraform-lock-table"                     # <--- REPLACE with your DynamoDB table name (optional but recommended)
+  }
+}

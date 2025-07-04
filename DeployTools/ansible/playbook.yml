@@ -73,6 +73,13 @@
           - "--exclude=*.swp"
           - "--exclude=*.bak"
 
+    - name: Verify copied files on EC2
+      ansible.builtin.command: ls -la {{ app_project_dir }}
+      register: ls_output
+    - name: Display contents of app directory on EC2
+      ansible.builtin.debug:
+        var: ls_output.stdout_lines
+
     - name: Ensure correct ownership for copied project files
       ansible.builtin.file:
         path: "{{ app_project_dir }}"

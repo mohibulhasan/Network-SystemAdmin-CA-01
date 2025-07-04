@@ -1,6 +1,6 @@
 ---
 - name: Deploy Dockerized Nginx Static App with Docker Compose to EC2
-  hosts: webservers # This should match the group name in your inventory (e.g., [webservers] in hosts.ini)
+  hosts: webservers
   become: yes # This allows tasks to run with sudo privileges
   vars:
     ansible_user: ubuntu # Explicitly set the SSH user for Ubuntu AMIs
@@ -58,15 +58,15 @@
 
     - name: Copy entire project context to EC2 for Docker Compose build
       ansible.builtin.synchronize:
-        # 'lookup('env', 'PWD')' gets the absolute path of the current working directory on the Ansible Controller
-        # This assumes you run 'ansible-playbook' from your repository's root.
-        src: "{{ lookup('env', 'PWD') }}/" # Source is the Ansible Controller's current working directory (repo root)
+        # CORRECTED: 'src' now correctly points to the repository root relative to Ansible's working directory.
+        # '../../' means go up two directories from 'DeployTools/ansible/' to reach 'Network-SystemAdmin-CA-01/'.
+        src: ../../ # <--- CRITICAL FIX: Changed from '{{ lookup('env', 'PWD') }}/' to '../../'
         dest: "{{ app_project_dir }}/" # Destination on EC2 (e.g., /opt/network-systemadmin-app/)
         mode: push # Push files from the controller to the remote host
         archive: yes # This is crucial: copies recursively, preserves symlinks, permissions, ownership, timestamps (like rsync -a)
         # Exclude directories/files that are not part of the deployable application context
-        rsync_opts: # <-- CHANGE THIS LINE
-          - "--exclude=.git/" # <-- ADD '--exclude=' prefix to each item
+        rsync_opts:
+          - "--exclude=.git/"
           - "--exclude=DeployTools/"
           - "--exclude=.vscode/"
           - "--exclude=__pycache__/"
@@ -94,7 +94,7 @@
       ansible.builtin.command: |
         docker-compose up -d --build --force-recreate
       args:
-        chdir: "{{ app_project_dir }}"
+        chdir: "{{ app_project_dir }}" # IMPORTANT: This ensures docker-compose is run from where docker-compose.yml is
       register: docker_compose_output
       changed_when: "docker_compose_output.rc == 0 and ('Creating' in docker_compose_output.stdout or 'Recreating' in docker_compose_output.stdout or 'Building' in docker_compose_output.stdout)"
 

@@ -1,6 +1,6 @@
 ---
 - name: Deploy Dockerized Nginx Static App with Docker Compose to EC2
-  hosts: webservers # <--- CORRECTED: Changed from 'web_servers' to 'webservers' to match your main.yml inventory
+  hosts: webservers # <--- CONFIRMED: Matches your main.yml inventory group [webservers]
   become: yes
   vars:
     ansible_user: ubuntu
@@ -46,47 +46,25 @@
         group: ubuntu
         recurse: yes
 
-    # --- START DEBUGGING GITHUB ACTIONS RUNNER PATHS ---
-    - name: Debug Display GITHUB_WORKSPACE environment variable
-      ansible.builtin.debug:
-        var: lookup('env', 'GITHUB_WORKSPACE')
-
-    - name: Debug List contents of GITHUB_WORKSPACE
-      ansible.builtin.command: ls -la "{{ lookup('env', 'GITHUB_WORKSPACE') }}/"
-      register: ls_github_workspace
-    - name: Display contents of GITHUB_WORKSPACE
-      ansible.builtin.debug:
-        var: ls_github_workspace.stdout_lines
-
-    - name: Debug List contents of expected repo root (if exists)
-      ansible.builtin.command: ls -la "{{ lookup('env', 'GITHUB_WORKSPACE') }}/"
-      register: ls_expected_repo_root
-      ignore_errors: yes # This might fail if the directory doesn't exist
-    - name: Display contents of expected repo root
-      ansible.builtin.debug:
-        var: ls_expected_repo_root.stdout_lines
-    # --- END DEBUGGING GITHUB ACTIONS RUNNER PATHS ---
     - name: Copy entire project context to EC2 for Docker Compose build
       ansible.builtin.synchronize:
-        src: "{{ lookup('env', 'GITHUB_WORKSPACE') }}/" # This path should now be correct
+        # CRITICAL FIX: With 'path: .' in checkout, GITHUB_WORKSPACE is now the repo root.
+        src: "{{ lookup('env', 'GITHUB_WORKSPACE') }}/" # <--- UPDATED src path
         dest: "{{ app_project_dir }}/"
         mode: push
         archive: yes
         rsync_opts:
           - "--exclude=.git/"
-          - "--exclude=DeployTools/"
+          - "--exclude=DeployTools/" # Ensure this still correctly excludes the DeployTools folder
           - "--exclude=.vscode/"
           - "--exclude=__pycache__/"
           - "--exclude=*.swp"
           - "--exclude=*.bak"
 
-    # --- KEEP DEBUGGING TASKS FOR NOW ---
-    - name: Verify copied files on EC2 (After synchronize)
-      ansible.builtin.command: ls -la {{ app_project_dir }}
-      register: ls_output_after_copy
-    - name: Display contents of app directory on EC2 (After synchronize)
-      ansible.builtin.debug:
-        var: ls_output_after_copy.stdout_lines
+    # --- REMOVE DEBUGGING TASKS (Delete these tasks) ---
+    # Delete the "Debug: Display GITHUB_WORKSPACE environment variable",
+    # "Debug: List contents of GITHUB_WORKSPACE", and
+    # "Debug: List contents of expected repo root (if exists)" tasks.
     # --- END DEBUGGING TASKS ---
 
     - name: Ensure correct ownership for copied project files

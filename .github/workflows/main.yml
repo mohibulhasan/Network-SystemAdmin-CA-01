@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: . # Checkout the entire repository
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -91,8 +89,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: . # Checkout the entire repository
 
       - name: Install Ansible and Docker Python module
         run: pip install ansible docker # 'docker' is needed for Ansible's Docker modules
@@ -118,8 +114,5 @@ jobs:
       - name: Run Ansible Playbook - Deploy Dockerized Application
         # This assumes your main Ansible playbook for Docker deployment is named 'playbook.yml'
         # and is located in 'DeployTools/ansible'
-        uses: actions/checkout@v4
-        with:
-          path: ./DeployTools/ansible # Ensure the playbook is in the correct path
         run: ansible-playbook -i inventory/host.ini playbook.yml
-        #working-directory: ./DeployTools/ansible
+        working-directory: ./DeployTools/ansible

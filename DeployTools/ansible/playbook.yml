@@ -47,18 +47,18 @@
         recurse: yes
 
     # --- START DEBUGGING GITHUB ACTIONS RUNNER PATHS ---
-    - name: Debug: Display GITHUB_WORKSPACE environment variable
+    - name: Debug Display GITHUB_WORKSPACE environment variable
       ansible.builtin.debug:
         var: lookup('env', 'GITHUB_WORKSPACE')
 
-    - name: Debug: List contents of GITHUB_WORKSPACE
+    - name: Debug List contents of GITHUB_WORKSPACE
       ansible.builtin.command: ls -la "{{ lookup('env', 'GITHUB_WORKSPACE') }}/"
       register: ls_github_workspace
     - name: Display contents of GITHUB_WORKSPACE
       ansible.builtin.debug:
         var: ls_github_workspace.stdout_lines
 
-    - name: Debug: List contents of expected repo root (if exists)
+    - name: Debug List contents of expected repo root (if exists)
       ansible.builtin.command: ls -la "{{ lookup('env', 'GITHUB_WORKSPACE') }}/"
       register: ls_expected_repo_root
       ignore_errors: yes # This might fail if the directory doesn't exist

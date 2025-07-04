@@ -6,3 +6,4 @@ crash.log
 override.tf
 override.tf.json
 main.tfplan
+*.pem

@@ -1,5 +1,4 @@
-# .github/workflows/main.yml
-name: CI/CD Pipeline to Azure VM
+name: CI/CD Pipeline to AWS EC2
 
 on:
   push:
@@ -8,12 +7,10 @@ on:
   workflow_dispatch: # Allows manual triggering from GitHub UI
 
 env:
-  AZURE_RESOURCE_GROUP: "rg-lucky-jaybird" # Your Azure Resource Group name
-  AZURE_VM_NAME: "myVM" # Your VM's name as defined in Terraform
-  AZURE_VM_USERNAME: "mohibul" # Your SSH username for the VM
+  AWS_REGION: "eu-north-1"
 
 jobs:
-  # Job to build and push Docker image
+  # Job to build and push Docker image (This part is cloud-agnostic)
   build-and-push-docker:
     runs-on: ubuntu-latest
     steps:
@@ -26,25 +23,25 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }} # Docker Hub username secret
-          password: ${{ secrets.DOCKER_PASSWORD }} # Docker Hub password secret
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./Network-SystemAdmin-CA-01 # Path to Dockerfile context
-          file: ./Network-SystemAdmin-CA-01/nginx/Dockerfile.nginx # Path to Dockerfile
+          context: ./Network-SystemAdmin-CA-01 # Path to your Dockerfile context (project root)
+          file: ./Network-SystemAdmin-CA-01/nginx/Dockerfile.nginx # Path to your Dockerfile
           push: true
-          tags: mohibulhasan/network-systemadmin-ca-01-web:1.0 #  exact Docker Hub image and tag
+          tags: mohibulhasan/network-systemadmin-ca-01-web:1.0 # Your Docker Hub image and tag
           cache-from: type=gha # Use GitHub Actions cache for faster builds
           cache-to: type=gha,mode=max # Store build cache
 
-  # Job to provision infrastructure with Terraform
+  # Job to provision infrastructure with Terraform for AWS EC2
   terraform-apply:
     needs: build-and-push-docker # Depends on Docker image being built
     runs-on: ubuntu-latest
     outputs:
-      vm_public_ip: ${{ steps.terraform-output.outputs.vm_public_ip }} # Pass VM IP to next job
+      vm_public_ip: ${{ steps.terraform-output.outputs.vm_public_ip }} # Pass EC2 Public IP to the next job
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,17 +51,18 @@ jobs:
         with:
           terraform_version: 1.8.0 # Specifying desired Terraform version
 
-      - name: Login to Azure CLI
-        uses: azure/login@v1
+      # --- AWS Authentication: Replaces Azure CLI login ---
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # GitHub Secret for AWS Access Key ID
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # GitHub Secret for AWS Secret Access Key
+          aws-region: ${{ env.AWS_REGION }} # Use the AWS region defined in the workflow's env section
 
       - name: Terraform Init
         id: init
         run: terraform init
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform # path to Terraform files
+        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform # Path to your AWS Terraform files
 
       - name: Terraform Validate
         id: validate
@@ -76,43 +74,47 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform
 
-      - name: Get VM Public IP from Terraform output
+      - name: Get EC2 Public IP from Terraform output
         id: terraform-output
         run: |
+          # Assuming your AWS Terraform configuration outputs the EC2 public IP as 'vm_public_ip'
           VM_IP=$(terraform output -raw vm_public_ip)
           echo "vm_public_ip=$VM_IP" >> $GITHUB_OUTPUT
         working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform
 
-  # Job to deploy application with Ansible
+  # Job to deploy application with Ansible to AWS EC2
   ansible-deploy:
-    needs: terraform-apply # Depends on Terraform provisioning
+    needs: terraform-apply # Depends on Terraform provisioning the EC2 instance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Ansible
-        run: pip install ansible docker # Install ansible and docker for ansible modules
+      - name: Install Ansible and Docker Python module
+        run: pip install ansible docker # 'docker' is needed for Ansible's Docker modules
 
       - name: Set up SSH key for Ansible
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_azure_vm.pem # Create a key file
-          chmod 400 ~/.ssh/id_azure_vm.pem # Set strict permissions
-          ssh-keyscan -H ${{ needs.terraform-apply.outputs.vm_public_ip }} >> ~/.ssh/known_hosts # Add VM to known_hosts to prevent SSH prompts
-        # Make sure this uses the correct key filename as referenced in inventory.ini
+          # Create a key file for Ansible SSH connection to EC2
+          # It's good practice to give it a specific name like 'id_ec2_ansible.pem'
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ec2_ansible.pem
+          chmod 400 ~/.ssh/id_ec2_ansible.pem # Set strict permissions for the private key
 
-      - name: Create Ansible inventory
-        # create the inventory dynamically for this run
+          # Add the EC2 instance's public IP to known_hosts to prevent SSH prompts
+          ssh-keyscan -H ${{ needs.terraform-apply.outputs.vm_public_ip }} >> ~/.ssh/known_hosts
+
+      - name: Create Ansible inventory for AWS EC2
         run: |
           echo "[web_servers]" > ansible/inventory.ini
-          echo "${{ needs.terraform-apply.outputs.vm_public_ip }} ansible_user=${{ env.AZURE_VM_USERNAME }} ansible_ssh_private_key_file=~/.ssh/id_rsa_ansible" >> ansible/inventory.ini
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/ansible # Path to ansible directory
+          # Use the EC2 public IP from Terraform output
+          # 'ansible_user=ubuntu' assumes your EC2 AMI uses 'ubuntu' as the default SSH user
+          # 'ansible_ssh_private_key_file' points to the key we just set up
+          echo "${{ needs.terraform-apply.outputs.vm_public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_ec2_ansible.pem" >> ansible/inventory.ini
+        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/ansible
 
-      - name: Run Ansible Playbook - Install Docker
-        run: ansible-playbook -i inventory.ini install_docker.yml
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/ansible # Path to ansible directory
-
-      - name: Run Ansible Playbook - Deploy Application
-        run: ansible-playbook -i inventory.ini deploy_app.yml
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/ansible # Path to ansible directory
+      - name: Run Ansible Playbook - Deploy Dockerized Application
+        # This assumes your main Ansible playbook for Docker deployment is named 'playbook.yml'
+        # and is located in 'DeployTools/ansible'
+        run: ansible-playbook -i inventory.ini playbook.yml
+        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/ansible

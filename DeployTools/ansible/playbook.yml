@@ -46,9 +46,29 @@
         group: ubuntu
         recurse: yes
 
+    # --- START DEBUGGING GITHUB ACTIONS RUNNER PATHS ---
+    - name: Debug: Display GITHUB_WORKSPACE environment variable
+      ansible.builtin.debug:
+        var: lookup('env', 'GITHUB_WORKSPACE')
+
+    - name: Debug: List contents of GITHUB_WORKSPACE
+      ansible.builtin.command: ls -la "{{ lookup('env', 'GITHUB_WORKSPACE') }}/"
+      register: ls_github_workspace
+    - name: Display contents of GITHUB_WORKSPACE
+      ansible.builtin.debug:
+        var: ls_github_workspace.stdout_lines
+
+    - name: Debug: List contents of expected repo root (if exists)
+      ansible.builtin.command: ls -la "{{ lookup('env', 'GITHUB_WORKSPACE') }}/"
+      register: ls_expected_repo_root
+      ignore_errors: yes # This might fail if the directory doesn't exist
+    - name: Display contents of expected repo root
+      ansible.builtin.debug:
+        var: ls_expected_repo_root.stdout_lines
+    # --- END DEBUGGING GITHUB ACTIONS RUNNER PATHS ---
     - name: Copy entire project context to EC2 for Docker Compose build
       ansible.builtin.synchronize:
-        src: "{{ lookup('env', 'GITHUB_WORKSPACE') }}/Network-SystemAdmin-CA-01/" # This path should now be correct
+        src: "{{ lookup('env', 'GITHUB_WORKSPACE') }}/" # This path should now be correct
         dest: "{{ app_project_dir }}/"
         mode: push
         archive: yes

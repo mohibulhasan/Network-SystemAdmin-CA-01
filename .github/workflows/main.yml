@@ -108,9 +108,6 @@ jobs:
         run: |
           mkdir -p inventory
           echo "[webservers]" > inventory/host.ini
-          # Use the EC2 public IP from Terraform output
-          # 'ansible_user=ubuntu' assumes your EC2 AMI uses 'ubuntu' as the default SSH user
-          # 'ansible_ssh_private_key_file' points to the key we just set up
           echo "${{ needs.terraform-apply.outputs.vm_public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_ec2_ansible.pem" >> inventory/host.ini
         working-directory: ./DeployTools/ansible
 

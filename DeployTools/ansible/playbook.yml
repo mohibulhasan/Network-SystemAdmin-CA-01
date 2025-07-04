@@ -1,23 +1,19 @@
 ---
 - name: Deploy Dockerized Nginx Static App with Docker Compose to EC2
-  hosts: webservers
-  become: yes # This allows tasks to run with sudo privileges
+  hosts: webservers # <--- CORRECTED: Changed from 'web_servers' to 'webservers' to match your main.yml inventory
+  become: yes
   vars:
-    ansible_user: ubuntu # Explicitly set the SSH user for Ubuntu AMIs
-    ansible_python_interpreter: /usr/bin/python3 # Specify Python 3 interpreter on the remote host
-
-    # Define the project directory on the EC2 instance where all app files will reside
-    app_project_dir: /opt/network-systemadmin-app # A dedicated directory on EC2 for your project
+    ansible_user: ubuntu
+    ansible_python_interpreter: /usr/bin/python3
+    app_project_dir: /opt/network-systemadmin-app
 
   tasks:
     - name: Update all apt packages
       ansible.builtin.apt:
         name: "*"
         state: latest
-        update_cache: yes # Update apt cache before installing/updating
+        update_cache: yes
 
-    # --- Docker Installation ---
-    # Installs the Docker Engine and sets up the service.
     - name: Install Docker.io package
       ansible.builtin.apt:
         name: docker.io
@@ -35,36 +31,27 @@
         name: ubuntu
         groups: docker
         append: yes
-      # Note: For this change to take effect for the currently logged-in 'ubuntu' user,
-      # a new SSH session is often required. For Ansible, subsequent tasks will run with 'become: yes' anyway.
 
-    # --- Docker Compose Installation ---
-    # Installs the standalone 'docker-compose' package (version 1), commonly available on older Ubuntu releases.
     - name: Install Docker Compose (v1) via apt
       ansible.builtin.apt:
         name: docker-compose
         state: present
 
-    # --- Copy Project Context to EC2 ---
-    # This prepares the EC2 instance with your entire application source code and Docker Compose configuration.
     - name: Create application project directory on EC2
       ansible.builtin.file:
         path: "{{ app_project_dir }}"
         state: directory
-        mode: "0755" # Standard directory permissions
-        owner: ubuntu # Ensure the 'ubuntu' user (who runs docker commands) owns this
+        mode: "0755"
+        owner: ubuntu
         group: ubuntu
         recurse: yes
 
     - name: Copy entire project context to EC2 for Docker Compose build
       ansible.builtin.synchronize:
-        # CORRECTED: 'src' now correctly points to the repository root relative to Ansible's working directory.
-        # '../../' means go up two directories from 'DeployTools/ansible/' to reach 'Network-SystemAdmin-CA-01/'.
-        src: ../../ # <--- CRITICAL FIX: Changed from '{{ lookup('env', 'PWD') }}/' to '../../'
-        dest: "{{ app_project_dir }}/" # Destination on EC2 (e.g., /opt/network-systemadmin-app/)
-        mode: push # Push files from the controller to the remote host
-        archive: yes # This is crucial: copies recursively, preserves symlinks, permissions, ownership, timestamps (like rsync -a)
-        # Exclude directories/files that are not part of the deployable application context
+        src: "{{ lookup('env', 'GITHUB_WORKSPACE') }}/Network-SystemAdmin-CA-01/" # This path should now be correct
+        dest: "{{ app_project_dir }}/"
+        mode: push
+        archive: yes
         rsync_opts:
           - "--exclude=.git/"
           - "--exclude=DeployTools/"
@@ -73,35 +60,35 @@
           - "--exclude=*.swp"
           - "--exclude=*.bak"
 
-    - name: Verify copied files on EC2
+    # --- KEEP DEBUGGING TASKS FOR NOW ---
+    - name: Verify copied files on EC2 (After synchronize)
       ansible.builtin.command: ls -la {{ app_project_dir }}
-      register: ls_output
-    - name: Display contents of app directory on EC2
+      register: ls_output_after_copy
+    - name: Display contents of app directory on EC2 (After synchronize)
       ansible.builtin.debug:
-        var: ls_output.stdout_lines
+        var: ls_output_after_copy.stdout_lines
+    # --- END DEBUGGING TASKS ---
 
     - name: Ensure correct ownership for copied project files
       ansible.builtin.file:
         path: "{{ app_project_dir }}"
         owner: ubuntu
         group: ubuntu
-        mode: "0755" # Apply permissions for directories, others will be adjusted by recurse
-        recurse: yes # Apply this recursively to all files and subdirectories within the project
+        mode: "0755"
+        recurse: yes
 
-    # --- Docker Compose Deployment ---
-    # These tasks manage the Docker services defined in your docker-compose.yml.
     - name: Stop and remove old Docker Compose services (if any)
       ansible.builtin.command: |
-        docker-compose down -v # Stops containers and removes volumes
+        docker-compose down -v
       args:
-        chdir: "{{ app_project_dir }}" # Run command from the project directory on EC2
-      ignore_errors: yes # Allow this task to fail if services aren't running yet (e.g., first deployment)
+        chdir: "{{ app_project_dir }}"
+      ignore_errors: yes
 
     - name: Build and run Docker Compose services
       ansible.builtin.command: |
         docker-compose up -d --build --force-recreate
       args:
-        chdir: "{{ app_project_dir }}" # IMPORTANT: This ensures docker-compose is run from where docker-compose.yml is
+        chdir: "{{ app_project_dir }}"
       register: docker_compose_output
       changed_when: "docker_compose_output.rc == 0 and ('Creating' in docker_compose_output.stdout or 'Recreating' in docker_compose_output.stdout or 'Building' in docker_compose_output.stdout)"
 

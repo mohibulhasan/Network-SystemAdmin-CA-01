@@ -29,8 +29,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./Network-SystemAdmin-CA-01 # Path to your Dockerfile context (project root)
-          file: ./Network-SystemAdmin-CA-01/nginx/Dockerfile.nginx # Path to your Dockerfile
+          context: . # Path to your Dockerfile context (project root)
+          file: ./nginx/Dockerfile.nginx # Path to your Dockerfile
           push: true
           tags: mohibulhasan/network-systemadmin-ca-01-web:1.0 # Your Docker Hub image and tag
           cache-from: type=gha # Use GitHub Actions cache for faster builds
@@ -62,17 +62,17 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform # Path to your AWS Terraform files
+        working-directory: ./DeployTools/terraform # Path to your AWS Terraform files
 
       - name: Terraform Validate
         id: validate
         run: terraform validate
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform
+        working-directory: ./DeployTools/terraform
 
       - name: Terraform Apply
         id: apply
         run: terraform apply -auto-approve
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform
+        working-directory: ./DeployTools/terraform
 
       - name: Get EC2 Public IP from Terraform output
         id: terraform-output
@@ -80,7 +80,7 @@ jobs:
           # Assuming your AWS Terraform configuration outputs the EC2 public IP as 'vm_public_ip'
           VM_IP=$(terraform output -raw vm_public_ip)
           echo "vm_public_ip=$VM_IP" >> $GITHUB_OUTPUT
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/terraform
+        working-directory: ./DeployTools/terraform
 
   # Job to deploy application with Ansible to AWS EC2
   ansible-deploy:
@@ -111,10 +111,10 @@ jobs:
           # 'ansible_user=ubuntu' assumes your EC2 AMI uses 'ubuntu' as the default SSH user
           # 'ansible_ssh_private_key_file' points to the key we just set up
           echo "${{ needs.terraform-apply.outputs.vm_public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_ec2_ansible.pem" >> ansible/inventory.ini
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/ansible
+        working-directory: ./DeployTools/ansible
 
       - name: Run Ansible Playbook - Deploy Dockerized Application
         # This assumes your main Ansible playbook for Docker deployment is named 'playbook.yml'
         # and is located in 'DeployTools/ansible'
         run: ansible-playbook -i inventory.ini playbook.yml
-        working-directory: ./Network-SystemAdmin-CA-01/DeployTools/ansible
+        working-directory: ./DeployTools/ansible

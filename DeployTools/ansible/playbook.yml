@@ -75,16 +75,15 @@
         recurse: yes # Applies ownership and permissions recursively to all files and subdirectories.
 
     - name: Stop and remove old Docker Compose services (if any) # Stops and removes any previously running Docker Compose services.
-      ansible.builtin.command: | # Executes a shell command.
-        docker-compose down -v # Stops containers and removes networks/volumes. '-v' also removes named volumes.
+      ansible.builtin.command: |
+        docker-compose down -v
       args: # Arguments passed to the command module.
         chdir: "{{ app_project_dir }}" # Changes the directory to the app project dir before executing the command.
       ignore_errors: yes # Continues playbook execution even if this command fails (e.g., if no services are running yet).
 
     - name: Build and run Docker Compose services # Builds Docker images and starts services defined in docker-compose.yml.
       ansible.builtin.command: |
-        docker-compose up -d --build --force-recreate # Starts services in detached mode ('-d'),
-                                                      # rebuilds images ('--build'), and recreates containers ('--force-recreate').
+        docker-compose up -d --build --force-recreate
       args:
         chdir: "{{ app_project_dir }}" # Executes the command from the application's root directory.
       register: docker_compose_output # Registers the output of the command into a variable.

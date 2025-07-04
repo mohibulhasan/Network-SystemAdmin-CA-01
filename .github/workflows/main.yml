@@ -4,7 +4,8 @@ on: # Defines when the workflow will be triggered.
   push: # Triggers the workflow when commits are pushed to specified branches.
     branches:
       - main # Workflow runs on pushes to the 'main' branch.
-  workflow_dispatch:# Allows you to manually trigger the workflow from the GitHub UI.
+  workflow_dispatch:
+    # Allows you to manually trigger the workflow from the GitHub UI.
     # This is useful for testing or re-running the pipeline on demand.
 
 env: # Environment variables available to all jobs in this workflow.

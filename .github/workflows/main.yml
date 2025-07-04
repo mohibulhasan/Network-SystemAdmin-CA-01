@@ -5,7 +5,6 @@ on: # Defines when the workflow will be triggered.
     branches:
       - main # Workflow runs on pushes to the 'main' branch.
   workflow_dispatch:
-    # Allows you to manually trigger the workflow from the GitHub UI.
     # This is useful for testing or re-running the pipeline on demand.
 
 env: # Environment variables available to all jobs in this workflow.
@@ -18,8 +17,6 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
     steps: # A sequence of tasks or actions to be performed in this job.
       - name: Checkout repository # Name of the step.
         uses: actions/checkout@v4 # Uses the 'checkout' action to clone your repository onto the runner.
-        # with: # Configuration options for the 'checkout' action.
-        #   path: . # If uncommented, this would clone the repository directly into the GITHUB_WORKSPACE directory.
         # It's important for consistent paths, and was a previous suggestion to fix pathing issues.
 
       - name: Set up Docker Buildx # Configures Docker Buildx for advanced Docker builds.
@@ -34,9 +31,7 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
       - name: Build and push Docker image # Builds the Docker image and pushes it to Docker Hub.
         uses: docker/build-push-action@v5
         with:
-          context:
-            . # The build context for Docker is the current directory (GITHUB_WORKSPACE),
-            # which is the root of your cloned repository within the runner's default checkout structure.
+          context: .
           file: ./nginx/Dockerfile.nginx # Specifies the path to your Dockerfile for the Nginx service.
           push: true # Instructs the action to push the built image to Docker Hub.
           tags: mohibulhasan/network-systemadmin-ca-01-web:1.0 # The Docker image name and tag to be used.
@@ -112,7 +107,7 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
           # Creates a private key file on the runner from a GitHub Secret.
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ec2_ansible.pem
           chmod 400 ~/.ssh/id_ec2_ansible.pem # Sets strict permissions (read-only for owner) for the private key,
-                                              # which is required by SSH.
+                                            # which is required by SSH.
           # Adds the EC2 instance's public IP to the known_hosts file to prevent SSH prompts (like "Are you sure you want to continue connecting?").
           ssh-keyscan -H ${{ needs.terraform-apply.outputs.vm_public_ip }} >> ~/.ssh/known_hosts
 

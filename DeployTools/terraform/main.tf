@@ -2,7 +2,7 @@
 
 # ----------------------------------------------------
 # AWS VPC and Subnet (Basic setup, adapt as needed)
-# A VPC is your virtual network in AWS.
+# A VPC is the virtual network in AWS.
 # ----------------------------------------------------
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -53,7 +53,7 @@ resource "aws_route_table_association" "public" {
 resource "aws_security_group" "web_server_sg" {
   name        = "${var.environment}-web-server-sg"
   description = "Allow SSH and HTTP inbound traffic"
-  vpc_id      = aws_vpc.main.id # Associate with your VPC
+  vpc_id      = aws_vpc.main.id # Associate with the VPC
 
   # Inbound rule for SSH
   ingress {
@@ -99,7 +99,7 @@ resource "tls_private_key" "ssh_key_generated" {
 
 # Data source to reference the existing EC2 Key Pair
 data "aws_key_pair" "existing_ec2_key" {
-  key_name = "my-ec2-keypair" # <--- This MUST match the exact name of your existing key pair
+  key_name = "my-ec2-keypair" # <--- This MUST match the exact name of existing key pair
 }
 #======= had issue with AWS existing key pair=====================
 # resource "aws_key_pair" "ec2_key" {
@@ -122,7 +122,7 @@ resource "local_file" "ssh_private_key_pem" {
 }
 
 # ----------------------------------------------------
-# AWS EC2 Instance (Your Virtual Machine)
+# AWS EC2 Instance (Virtual Machine)
 # ----------------------------------------------------
 resource "aws_instance" "web_server" {
   ami                         = var.ami_id
@@ -156,10 +156,9 @@ resource "aws_instance" "web_server" {
 
 terraform {
   backend "s3" {
-    bucket         = "network-admin-ci-cd-bucket-1"  # <--- REPLACE with your actual S3 bucket name
-    key            = "app-deployment/terraform.tfstate"         # <--- A unique path/name for this specific state file
-    region         = "eu-north-1"                                # <--- REPLACE with your AWS_REGION
-    encrypt        = true                                       # Encrypts the state file at rest
-    #dynamodb_table = "terraform-lock-table"                     # <--- REPLACE with your DynamoDB table name (optional but recommended)
+    bucket         = "network-admin-ci-cd-bucket-1"  # <--- The actual S3 bucket name created in AWS management console
+    key            = "app-deployment/terraform.tfstate" 
+    region         = "eu-north-1"                       
+    encrypt        = true                               
   }
 }

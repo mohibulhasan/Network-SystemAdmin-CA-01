@@ -15,11 +15,11 @@ terraform {
     }
   }
 
-  required_version = ">= 1.0.0" # Ensure your Terraform CLI version is compatible
+  required_version = ">= 1.0.0" # Ensures Terraform CLI version is compatible
 }
 
 provider "aws" {
-  region = var.aws_region # We'll define aws_region as a variable
+  region = var.aws_region # We defined aws_region as a variable
   # AWS credentials (access key, secret key) are typically picked up from
   # environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
   # which GitHub Actions will manage using the 'configure-aws-credentials' action.

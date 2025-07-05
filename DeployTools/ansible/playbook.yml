@@ -2,12 +2,12 @@
 - name: Deploy Dockerized Nginx Static App with Docker Compose to EC2 # Name of the Ansible playbook.
   hosts:
     webservers # Specifies the group of hosts from the inventory that this playbook will target.
-    # 'webservers' must match the group name defined in your 'inventory/host.ini'.
+    # 'webservers' must match the group name defined in 'inventory/host.ini'.
   become: yes # Grants elevated privileges (sudo) for tasks executed on the remote host.
   vars: # Defines variables that can be used throughout this playbook.
     ansible_user: ubuntu # The SSH username to connect to the EC2 instance.
     ansible_python_interpreter: /usr/bin/python3 # Specifies the Python interpreter path on the remote host.
-    app_project_dir: /opt/network-systemadmin-app # The directory on the EC2 instance where your application will be deployed.
+    app_project_dir: /opt/network-systemadmin-app # The directory on the EC2 instance where application will be deployed.
 
   tasks: # A list of tasks to be executed in sequential order.
     - name: Update all apt packages # Updates the package lists and upgrades all installed packages on Ubuntu.
@@ -54,7 +54,7 @@
         # This ensures all project files (including docker-compose.yml and nginx/) are copied.
         src:
           "{{ lookup('env', 'GITHUB_WORKSPACE') }}/" # The source path on the GitHub Actions runner.
-          # GITHUB_WORKSPACE now points directly to your repository's root.
+          # GITHUB_WORKSPACE now points directly to repository's root.
         dest: "{{ app_project_dir }}/" # The destination path on the EC2 instance.
         mode: push # Pushes files from the Ansible controller (runner) to the remote host (EC2).
         archive: yes # Ensures recursive, symlink-preserving, and permission-preserving copy.

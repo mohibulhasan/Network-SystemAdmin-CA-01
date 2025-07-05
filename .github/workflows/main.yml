@@ -1,4 +1,4 @@
-name: CI/CD Pipeline to AWS EC2 # Name of your GitHub Actions workflow, displayed in the Actions tab.
+name: CI/CD Pipeline to AWS EC2 # Name of GitHub Actions workflow, displayed in the Actions tab.
 
 on: # Defines when the workflow will be triggered.
   push: # Triggers the workflow when commits are pushed to specified branches.
@@ -16,7 +16,7 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
     runs-on: ubuntu-latest # Specifies the type of runner (virtual machine) to use for this job.
     steps: # A sequence of tasks or actions to be performed in this job.
       - name: Checkout repository # Name of the step.
-        uses: actions/checkout@v4 # Uses the 'checkout' action to clone your repository onto the runner.
+        uses: actions/checkout@v4 # Uses the 'checkout' action to clone repository onto the runner.
         # It's important for consistent paths, and was a previous suggestion to fix pathing issues.
 
       - name: Set up Docker Buildx # Configures Docker Buildx for advanced Docker builds.
@@ -32,7 +32,7 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./nginx/Dockerfile.nginx # Specifies the path to your Dockerfile for the Nginx service.
+          file: ./nginx/Dockerfile.nginx # Specifies the path to Dockerfile for the Nginx service.
           push: true # Instructs the action to push the built image to Docker Hub.
           tags: mohibulhasan/network-systemadmin-ca-01-web:1.0 # The Docker image name and tag to be used.
           cache-from: type=gha # Uses GitHub Actions cache for speeding up subsequent builds.
@@ -67,7 +67,7 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
       - name: Terraform Init # Initializes a Terraform working directory.
         id: init # Assigns an ID to this step to reference its outputs later.
         run: terraform init # Executes the 'terraform init' command.
-        working-directory: ./DeployTools/terraform # Sets the working directory for this command, where your Terraform files are located.
+        working-directory: ./DeployTools/terraform # Sets the working directory for this command, where Terraform files are located.
 
       - name: Terraform Validate # Validates the Terraform configuration files.
         id: validate
@@ -82,7 +82,7 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
       - name: Get EC2 Public IP from Terraform output # Retrieves the public IP of the provisioned EC2 instance.
         id: terraform-output # Assigns an ID to capture its output.
         run: | # Multiline shell script.
-          # Assumes your AWS Terraform configuration outputs the EC2 public IP as 'vm_public_ip'.
+          # Assumes AWS Terraform configuration outputs the EC2 public IP as 'vm_public_ip'.
           VM_IP=$(terraform output -raw vm_public_ip) # Captures the Terraform output into a shell variable.
           echo "vm_public_ip=$VM_IP" >> $GITHUB_OUTPUT # Sets the 'vm_public_ip' as a step output,
                                                       # which is then exposed as a job output.
@@ -118,7 +118,7 @@ jobs: # Defines a set of jobs that will be executed as part of the workflow.
           # Adds the EC2 instance's public IP to the inventory under the 'webservers' group,
           # specifying the SSH user ('ubuntu') and the path to the private key.
           echo "${{ needs.terraform-apply.outputs.vm_public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_ec2_ansible.pem" >> inventory/host.ini
-        working-directory: ./DeployTools/ansible # Sets the working directory to where your Ansible files are.
+        working-directory: ./DeployTools/ansible # Sets the working directory to where Ansible files are.
 
       - name: Run Ansible Playbook - Deploy Dockerized Application # Executes the main Ansible playbook for deployment.
         run: ansible-playbook -i inventory/host.ini playbook.yml # Runs the playbook, specifying the inventory file.

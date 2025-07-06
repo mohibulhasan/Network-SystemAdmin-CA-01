@@ -235,7 +235,9 @@ Once the `ansible-deploy` job successfully completes (all steps show a green che
 
 ## ✨ Further Enhancements
 
-This project provides a solid foundation. Here are some ideas for future improvements:
+The project is a solid foundation for future deployments practices and enhancements of
+individual critical DevOps skills and provide long-term benefits for working in operational
+environments with confidence. Further below enhancements can be done in future.
 
 - **Blue/Green or Canary Deployments:** Implement more advanced deployment strategies for zero-downtime updates.
 - **Monitoring & Alerting:** Integrate tools like Prometheus/Grafana or AWS CloudWatch for application and infrastructure monitoring.

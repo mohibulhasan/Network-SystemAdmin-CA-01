@@ -1,11 +1,11 @@
 # my_static_app/docker-compose.yml
-# This file defines the services, networks, and volumes for your Docker application.
-# It allows you to run a multi-container Docker application with a single command.
+# This file defines the services, networks, and volumes for  Docker application.
+# It allow us to run a multi-container Docker application with a single command.
 
 version: '3.8' # Specifies the Docker Compose file format version. Using '3.8' for modern features.
 
-services: # Defines the services (containers) that make up your application.
-  web: # This is the name of your first service, often representing a web server.
+services: # Defines the services (containers) that make up  application.
+  web: # This is the name of  first service, often representing a web server.
     # Build the image using the Dockerfile located in the nginx/ directory.
     # The build context is the project root ('.'), allowing access to 'public/'
     build: # Specifies how to build the Docker image for this service.
@@ -19,7 +19,7 @@ services: # Defines the services (containers) that make up your application.
     ports: # Maps ports between the host machine and the container.
       - "80:80" # Maps port 80 on the host (where Docker Compose is running)
                 # to port 80 inside the container. This allows external traffic
-                # to reach your Nginx web server running inside the container.
+                # to reach  Nginx web server running inside the container.
     restart: always # Specifies the restart policy for the container.
                     # 'always' means the container will always restart if it stops,
                     # unless it is explicitly stopped or Docker is restarted.

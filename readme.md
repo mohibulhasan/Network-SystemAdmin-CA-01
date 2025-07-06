@@ -17,9 +17,9 @@ This project demonstrates a robust and automated Continuous Integration/Continuo
 
 Our project is organized to keep things clean and manageable. Here's a quick look at the main directories and their contents:
 
-Here is a comprehensive and detailed README.md file, updated with explanations and specifics directly from the files you provided (playbook.yml, nginx.conf, docker-compose.yml, main.yml, hosts.ini, terraform-main.tf, terraform-variables.tf, and terraform-versions.tf).
+Here is a comprehensive and detailed README.md file, updated with explanations and specifics directly from the files we provided (playbook.yml, nginx.conf, docker-compose.yml, main.yml, hosts.ini, terraform-main.tf, terraform-variables.tf, and terraform-versions.tf).
 
-This README.md is designed to be placed at the root of your GitHub repository and will serve as the primary documentation for your project.
+This README.md is designed to be placed at the root of my GitHub repository and will serve as the primary documentation for my project.
 
 Markdown
 
@@ -60,7 +60,7 @@ Our project is organized to keep things clean and manageable. Here's a quick loo
 │   ├── Dockerfile.nginx              # Dockerfile to build the Nginx web app image.
 │   └── nginx.conf                    # Custom Nginx configuration for the web server.
 ├── public/
-│   └── index.html                    # Sample static web content (your web page).
+│   └── index.html                    # Sample static web content (my web page).
 ├── docker-compose.yml                # Defines Docker services for the web application (Nginx web).
 └── README.md                         # This file!
 
@@ -70,13 +70,13 @@ Our project is organized to keep things clean and manageable. Here's a quick loo
 
 ## 📋 Prerequisites
 
-Before you get started, make sure you have the following in place:
+Before we get started, make sure we have the following in place:
 
 1.  **AWS Account:** An active AWS account with programmatic access (Access Key ID and Secret Access Key).
 2.  **AWS IAM User:** An IAM user with sufficient permissions to create/manage EC2 instances, Security Groups, VPC resources, S3 buckets (for Terraform state backend), and DynamoDB tables (for Terraform state locking).
-3.  **Docker Hub Account:** An account on Docker Hub to store your Docker images.
-4.  **GitHub Account:** A GitHub account to host your repository and run GitHub Actions.
-5.  **An Existing AWS EC2 Key Pair:** A pre-existing EC2 Key Pair in your AWS account named `my-ec2-keypair` in the `eu-north-1` region. The private key corresponding to this public key will need to be provided to GitHub Actions as a secret.
+3.  **Docker Hub Account:** An account on Docker Hub to store my Docker images.
+4.  **GitHub Account:** A GitHub account to host my repository and run GitHub Actions.
+5.  **An Existing AWS EC2 Key Pair:** A pre-existing EC2 Key Pair in my AWS account named `my-ec2-keypair` in the `eu-north-1` region. The private key corresponding to this public key will need to be provided to GitHub Actions as a secret.
 6.  **Local Tools (for local testing/development - CI/CD handles deployment):**
     - Git
     - Docker Desktop (or Docker Engine & Docker Compose)
@@ -90,43 +90,43 @@ This project is primarily designed for automated deployment via GitHub Actions. 
 
 ### 1. AWS Credentials
 
-**Important:** Your AWS credentials **must not** be hardcoded into your repository. They should be securely stored as GitHub Secrets.
+**Important:** my AWS credentials **must not** be hardcoded into my repository. They should be securely stored as GitHub Secrets.
 
-- In your GitHub repository, go to `Settings` > `Secrets and variables` > `Actions` > `New repository secret`.
+- In my GitHub repository, go to `Settings` > `Secrets and variables` > `Actions` > `New repository secret`.
 - Add the following secrets:
-  - `AWS_ACCESS_KEY_ID`: Your AWS IAM user access key.
-  - `AWS_SECRET_ACCESS_KEY`: Your AWS IAM user secret access key.
-  - `SSH_PRIVATE_KEY`: The private key associated with your AWS EC2 key pair (`my-ec2-keypair`). This key is crucial for Ansible to connect to the EC2 instance. **Ensure this key is correctly formatted; for multi-line keys, it's best to paste it as is, or base64 encode it if issues arise.**
+  - `AWS_ACCESS_KEY_ID`: my AWS IAM user access key.
+  - `AWS_SECRET_ACCESS_KEY`: my AWS IAM user secret access key.
+  - `SSH_PRIVATE_KEY`: The private key associated with my AWS EC2 key pair (`my-ec2-keypair`). This key is crucial for Ansible to connect to the EC2 instance. **Ensure this key is correctly formatted; for multi-line keys, it's best to paste it as is, or base64 encode it if issues arise.**
 
 ### 2. Docker Hub Credentials
 
-Similar to AWS, your Docker Hub credentials should be stored securely:
+Similar to AWS, my Docker Hub credentials should be stored securely:
 
-- In your GitHub repository, go to `Settings` > `Secrets and variables` > `Actions` > `New repository secret`.
+- In my GitHub repository, go to `Settings` > `Secrets and variables` > `Actions` > `New repository secret`.
 - Add the following secrets:
-  - `DOCKER_USERNAME`: Your Docker Hub username.
-  - `DOCKER_PASSWORD`: Your Docker Hub password (or a personal access token for enhanced security).
+  - `DOCKER_USERNAME`: my Docker Hub username.
+  - `DOCKER_PASSWORD`: my Docker Hub password (or a personal access token for enhanced security).
 
 ### 3. Terraform Configuration (`DeployTools/terraform/`)
 
-Terraform is used to provision your AWS infrastructure.
+Terraform is used to provision my AWS infrastructure.
 
 - **`main.tf`**:
   - Defines an AWS VPC (`10.0.0.0/16`) and a public subnet (`10.0.1.0/24`) with an Internet Gateway for internet access.
   - Sets up a Security Group (`${var.environment}-web-server-sg`) to allow inbound SSH (Port 22) and HTTP (Port 80) traffic from anywhere (`0.0.0.0/0`).
   - References an **existing AWS EC2 Key Pair** named `my-ec2-keypair` using `data "aws_key_pair"`. The corresponding private key is expected to be provided as `SSH_PRIVATE_KEY` GitHub Secret.
   - Provisions an AWS EC2 instance (`${var.environment}-web-server`) in the public subnet, associating a public IP.
-  - Includes a `user_data` script (intended for initial setup) within the EC2 instance definition. **Note:** The current `user_data` script uses `yum` and `amazon-linux-extras`, which are for Amazon Linux. However, your `ami_id` in `variables.tf` specifies an Ubuntu 24.04 AMI, and Ansible expects an `ubuntu` user with `apt`. For proper initial setup on Ubuntu, the `user_data` should be adjusted to use `apt` commands (e.g., `sudo apt-get update -y && sudo apt-get install -y docker.io`).
+  - Includes a `user_data` script (intended for initial setup) within the EC2 instance definition. **Note:** The current `user_data` script uses `yum` and `amazon-linux-extras`, which are for Amazon Linux. However, my `ami_id` in `variables.tf` specifies an Ubuntu 24.04 AMI, and Ansible expects an `ubuntu` user with `apt`. For proper initial setup on Ubuntu, the `user_data` should be adjusted to use `apt` commands (e.g., `sudo apt-get update -y && sudo apt-get install -y docker.io`).
   - Configures an S3 backend for Terraform state management:
     ```hcl
     backend "s3" {
-      bucket         = "network-admin-ci-cd-bucket-1"  # <--- MUST match your manually created S3 bucket
+      bucket         = "network-admin-ci-cd-bucket-1"  # <--- MUST match my manually created S3 bucket
       key            = "app-deployment/terraform.tfstate"
       region         = "eu-north-1"
       encrypt        = true
     }
     ```
-    **Action Required:** You **must manually create an S3 bucket** named `network-admin-ci-cd-bucket-1` in the `eu-north-1` region before running the pipeline for the first time. It is highly recommended to enable **versioning** on this S3 bucket for state history and recovery. If you plan to use state locking, you'd also need a DynamoDB table named `terraform-lock` (with `LockID` as a primary key).
+    **Action Required:** we **must manually create an S3 bucket** named `network-admin-ci-cd-bucket-1` in the `eu-north-1` region before running the pipeline for the first time. It is highly recommended to enable **versioning** on this S3 bucket for state history and recovery. If we plan to use state locking, we'd also need a DynamoDB table named `terraform-lock` (with `LockID` as a primary key) but we skiped this part.
 - **`variables.tf`**:
   - `aws_region`: `eu-north-1`
   - `instance_type`: `t3.micro` (free tier eligible)
@@ -153,19 +153,19 @@ This `playbook.yml` is the heart of the configuration management for the EC2 ins
 - Builds (if necessary) and runs the Docker Compose services in detached mode (`docker-compose up -d --build --force-recreate`), starting the Nginx web application.
 - Displays the Docker Compose deployment output for debugging.
 
-**Note:** The `DeployTools/ansible/inventory/host.ini` file you provided is an example for local manual execution. In the CI/CD pipeline, this file is dynamically generated by the `ansible-deploy` job in `main.yml` to ensure it points to the correct, newly provisioned EC2 instance.
+**Note:** The `DeployTools/ansible/inventory/host.ini` file we provided is an example for local manual execution. In the CI/CD pipeline, this file is dynamically generated by the `ansible-deploy` job in `main.yml` to ensure it points to the correct, newly provisioned EC2 instance.
 
 ### 5. Docker Configuration (`nginx/Dockerfile.nginx` & `docker-compose.yml`)
 
-- **`nginx/Dockerfile.nginx`**: This Dockerfile defines the instructions for building your Nginx web server image.
+- **`nginx/Dockerfile.nginx`**: This Dockerfile defines the instructions for building my Nginx web server image.
   - It starts from a lean `nginx:alpine` base image.
-  - Copies your custom `nginx.conf` into the container.
-  - Copies your static web content from the `public/` directory into Nginx's default web serving path (`/usr/share/nginx/html`) inside the container.
-- **`docker-compose.yml`**: This file defines the `web` service for your application.
+  - Copies my custom `nginx.conf` into the container.
+  - Copies my static web content from the `public/` directory into Nginx's default web serving path (`/usr/share/nginx/html`) inside the container.
+- **`docker-compose.yml`**: This file defines the `web` service for my application.
   - Uses `version: '3.8'`.
   - The `web` service's image is built from the `nginx/Dockerfile.nginx` relative to the project root.
   - Sets a `container_name` of `network-systemadmin-app`.
-  - Maps port 80 on the host machine to port 80 inside the container (`"80:80"`), making your web app accessible.
+  - Maps port 80 on the host machine to port 80 inside the container (`"80:80"`), making my web app accessible.
   - Configures `restart: always` to ensure the container automatically restarts if it stops.
 
 ### 6. GitHub Actions Workflow (`.github/workflows/main.yml`)
@@ -211,8 +211,8 @@ This `main.yml` file orchestrates the entire CI/CD pipeline, triggered on `push`
 
 Once the `ansible-deploy` job successfully completes (all steps show a green checkmark):
 
-1.  **Retrieve EC2 Public IP:** In the `terraform-apply` job logs, find the output for `vm_public_ip`. Alternatively, you can find the Public IPv4 address in your AWS EC2 console under "Instances".
-2.  **Access Web Application:** Open your web browser and navigate to `http://<YOUR_EC2_PUBLIC_IP>`. You should see the static Nginx web page served by your Docker container.
+1.  **Retrieve EC2 Public IP:** In the `terraform-apply` job logs, find the output for `vm_public_ip`. Alternatively, we can find the Public IPv4 address in my AWS EC2 console under "Instances".
+2.  **Access Web Application:** Open my web browser and navigate to `http://<my_EC2_PUBLIC_IP>`. we should see the static Nginx web page served by my Docker container.
 
 ## 🐛 Troubleshooting
 
@@ -221,16 +221,16 @@ Once the `ansible-deploy` job successfully completes (all steps show a green che
   - Common issues include: Incorrect GitHub Secrets, incorrect file paths in workflow/playbook, AWS permission errors, Docker Hub login issues, or network connectivity problems.
 - **Terraform Issues:**
   - Locally run `terraform validate` in `DeployTools/terraform/` to catch syntax errors.
-  - Ensure your S3 backend bucket (`network-admin-ci-cd-bucket-1`) exists in the correct region and is correctly configured in `main.tf`.
-  - Verify your AWS IAM user has the necessary permissions for EC2, VPC, S3, and potentially DynamoDB.
-  - **User Data Inconsistency:** As noted in `main.tf` explanation, ensure the `user_data` script matches your chosen AMI (Ubuntu in this case) and uses `apt` commands if you intend it to run (though Ansible will perform Docker setup later anyway).
+  - Ensure my S3 backend bucket (`network-admin-ci-cd-bucket-1`) exists in the correct region and is correctly configured in `main.tf`.
+  - Verify my AWS IAM user has the necessary permissions for EC2, VPC, S3, and potentially DynamoDB.
+  - **User Data Inconsistency:** As noted in `main.tf` explanation, ensure the `user_data` script matches my chosen AMI (Ubuntu in this case) and uses `apt` commands if we intend it to run (though Ansible will perform Docker setup later anyway).
 - **Ansible Connection Issues:**
-  - Verify that your `SSH_PRIVATE_KEY` secret is correctly formatted and has no extra spaces or newlines.
+  - Verify that my `SSH_PRIVATE_KEY` secret is correctly formatted and has no extra spaces or newlines.
   - Ensure the EC2 Security Group (`${var.environment}-web-server-sg`) allows SSH (Port 22) traffic from the GitHub Actions runner's IP ranges (which are usually dynamic, so `0.0.0.0/0` in the SG is typical for CI/CD unless more advanced IP restrictions are in place).
-  - Confirm the `ansible_user` (`ubuntu`) is correct for your Ubuntu AMI.
+  - Confirm the `ansible_user` (`ubuntu`) is correct for my Ubuntu AMI.
 - **Application Not Accessible (HTTP 80):**
-  - Check the EC2 Security Group inbound rules to ensure Port 80 is open to `0.0.0.0/0` (or your intended source IPs).
-  - SSH into the EC2 instance (using your private key: `ssh -i ~/.ssh/id_ec2_ansible.pem ubuntu@<EC2_PUBLIC_IP>`) and run `sudo docker ps` to confirm the `network-systemadmin-app` container is running.
+  - Check the EC2 Security Group inbound rules to ensure Port 80 is open to `0.0.0.0/0` (or my intended source IPs).
+  - SSH into the EC2 instance (using my private key: `ssh -i ~/.ssh/id_ec2_ansible.pem ubuntu@<EC2_PUBLIC_IP>`) and run `sudo docker ps` to confirm the `network-systemadmin-app` container is running.
   - Check Docker container logs for errors: `sudo docker logs network-systemadmin-app`.
 
 ## ✨ Further Enhancements

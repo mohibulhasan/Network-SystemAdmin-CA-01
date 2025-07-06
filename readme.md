@@ -137,8 +137,9 @@ Terraform is used to provision my AWS infrastructure.
 - **`versions.tf`**:
   - Specifies required Terraform version `>= 1.0.0`.
   - Defines required providers and their versions: `aws (~> 5.0)`, `tls (~> 4.0)` (for SSH key generation, though not directly used for EC2 in `main.tf`), and `local (~> 2.0)` (for writing private key to local file, also not used in CI/CD).
-    **A conceptual diagram of the deployed resources would illustrate:**
-    ![Terraform to AWS EC2](./Documents/img/Terraform-with-GitActions.png "A conceptual diagram of Terraform-to-AWS via GitActions illustration")
+
+**A conceptual diagram of the deployed resources would illustrate:**
+![Terraform to AWS EC2](./Documents/img/Terraform-with-GitActions.png "A conceptual diagram of Terraform-to-AWS via GitActions illustration")
 
 ### 4. Ansible Playbook (`DeployTools/ansible/playbook.yml`)
 
